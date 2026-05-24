@@ -10,7 +10,7 @@ from functools import wraps
 
 app = Flask(__name__)
 CORS(app, origins=[
-    "https://task-recommendation-frontend.vercel.app",
+    "https://https://task-recommendation.vercel.app",
     "http://localhost:3000"  # For local testing
 ])
 # Configuration
