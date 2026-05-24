@@ -9,8 +9,10 @@ import os
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)
-
+CORS(app, origins=[
+    "https://task-recommendation-frontend.vercel.app",
+    "http://localhost:3000"  # For local testing
+])
 # Configuration
 app.config['JWT_SECRET_KEY'] = 'your-super-secret-key-change-this-in-production'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
