@@ -7,6 +7,8 @@ import sqlite3
 from datetime import datetime, timedelta
 import os
 from functools import wraps
+
+app = Flask(__name__)
 # Replace your existing CORS line with this:
 CORS(app, origins=[
     "https://task-recommendation.vercel.app",  # Your Vercel frontend
