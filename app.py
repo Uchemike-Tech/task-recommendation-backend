@@ -86,6 +86,41 @@ def check_dependencies(task_id, completed_tasks):
     except:
         return True
 
+# Helper function to get dependency details
+def get_dependency_details(task_id, completed_tasks):
+    """Get detailed dependency information for error messages"""
+    try:
+        response = requests.get(f"{ML_SERVICE_URL}/dependencies/{task_id}", timeout=10)
+        if response.status_code == 200:
+            deps_data = response.json()
+            dependencies = deps_data.get('dependencies', [])
+            dependency_names = deps_data.get('dependency_names', [])
+            
+            missing_deps = [dep for dep in dependencies if dep not in completed_tasks]
+            missing_names = []
+            
+            # Match missing dep IDs to names
+            if dependency_names:
+                for i, dep_id in enumerate(dependencies):
+                    if dep_id in missing_deps and i < len(dependency_names):
+                        missing_names.append(dependency_names[i])
+            
+            return {
+                'has_missing': len(missing_deps) > 0,
+                'missing_deps': missing_deps,
+                'missing_names': missing_names,
+                'total_deps': len(dependencies)
+            }
+    except Exception as e:
+        print(f"Error getting dependency details: {e}")
+    
+    return {
+        'has_missing': False,
+        'missing_deps': [],
+        'missing_names': [],
+        'total_deps': 0
+    }
+
 # Routes
 @app.route('/register', methods=['POST'])
 def register():
@@ -198,9 +233,19 @@ def complete_task(task_id):
     c.execute("SELECT task_id FROM task_history WHERE user_id = ?", (user_id,))
     completed_tasks = [row[0] for row in c.fetchall()]
     
-    # Check dependencies
-    if not check_dependencies(task_id, completed_tasks):
-        return jsonify({'error': 'Dependencies not completed for this task'}), 400
+    # Check dependencies with detailed error information
+    dep_details = get_dependency_details(task_id, completed_tasks)
+    
+    if dep_details['has_missing']:
+        missing_names_str = ', '.join(dep_details['missing_names']) if dep_details['missing_names'] else str(dep_details['missing_deps'])
+        error_message = f'Cannot complete this task. Required tasks not completed: {missing_names_str}'
+        
+        return jsonify({
+            'error': error_message,
+            'missing_dependencies': dep_details['missing_deps'],
+            'missing_dependency_names': dep_details['missing_names'],
+            'total_dependencies': dep_details['total_deps']
+        }), 400
     
     # Mark task as completed
     c.execute("""UPDATE user_tasks 
