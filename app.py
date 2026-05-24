@@ -7,12 +7,14 @@ import sqlite3
 from datetime import datetime, timedelta
 import os
 from functools import wraps
-
-app = Flask(__name__)
+# Replace your existing CORS line with this:
 CORS(app, origins=[
-    "https://https://task-recommendation.vercel.app",
-    "http://localhost:3000"  # For local testing
-])
+    "https://task-recommendation.vercel.app",  # Your Vercel frontend
+    "https://task-recommendation-frontend.vercel.app",  # Alternative URL
+    "http://localhost:3000",  # Local development
+    "http://localhost:5000"   # Local backend testing
+], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
+
 # Configuration
 app.config['JWT_SECRET_KEY'] = 'your-super-secret-key-change-this-in-production'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
